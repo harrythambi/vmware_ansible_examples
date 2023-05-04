@@ -1,0 +1,58 @@
+# - set_fact:
+#     subnets_list: []
+      
+# - name: Get list of subnet cidr
+#   set_fact:
+#     subnets_list: "{{ subnets_list + [{'gateway_address': subnet }] }}"
+#   loop: "{{segment.subnets_cidr}}"
+#   loop_control:
+#     loop_var: subnet
+    
+# - debug:
+#     var: edge_node_cluster
+
+- name: Create NSX-T Overlay Segment
+  delegate_to: localhost
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
+    hostname: "{{ nsxt_hostname }}"
+    username: "{{ nsxt_username }}"
+    password: "{{ nsxt_password }}"
+    validate_certs: "{{ validate_certs }}"
+    display_name: "{{ segment.name }}"
+    description: "{{ segment.description }}"
+    transport_zone_display_name: "{{ segment.transport_zone }}"
+    replication_mode: "{{ segment.replication_mode }}"
+    admin_state:  "UP"
+    state: present
+    tier0_display_name: "{{ segment.gw_name if segment.gw_tier == 0 else omit }}"
+    tier1_display_name: "{{ segment.gw_name if segment.gw_tier == 1 else omit }}"    
+    # dhcp_config_path: "/infra/dhcp-server-configs/{{ segment.dhcp_profile_name }}"
+    subnets:
+      - gateway_address: "{{ segment.subnets_cidr }}"
+        dhcp_ranges: 
+          - "{{ (segment.subnets_cidr | ipaddr(2)).split('/')[0] }} - {{ (segment.subnets_cidr | ipaddr(-2)).split('/')[0]}}"
+        dhcp_config:
+          resource_type: "SegmentDhcpV4Config"
+          lease_time: 84600
+  when: 
+    - segment.dhcp is defined
+    - segment.dhcp == 1
+
+- name: Create NSX-T Overlay Segment
+  delegate_to: localhost
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
+    hostname: "{{ nsxt_hostname }}"
+    username: "{{ nsxt_username }}"
+    password: "{{ nsxt_password }}"
+    validate_certs: "{{ validate_certs }}"
+    display_name: "{{ segment.name }}"
+    description: "{{ segment.description }}"
+    transport_zone_display_name: "{{ segment.transport_zone }}"
+    replication_mode: "{{ segment.replication_mode }}"
+    admin_state:  "UP"
+    state: present
+    tier0_display_name: "{{ segment.gw_name if (segment.gw_tier|default(omit)) == 0 else omit }}"
+    tier1_display_name: "{{ segment.gw_name if (segment.gw_tier|default(omit)) == 1 else omit }}"    
+    subnets:
+       - gateway_address: "{{ segment.subnets_cidr }}"
+  when: segment.dhcp == 0

@@ -1,0 +1,902 @@
+all:
+   children:
+      lab1:
+         children:
+            lab1_vyos_router: {}
+            lab1_esxi_edge_compute_hosts: {}
+            lab1_mgmt_vcenter: {}
+            lab1_nsxt_manager: {}
+            lab1_nsxt_edge_nodes: {}
+            lab1_nsxt_tier0_gws: {}
+            lab1_nsxt_tier0_vrf_gws: {}
+            lab1_avi_controller: {}
+            lab1_cloud_director_nfs: {}
+            lab1_cloud_director_postgres_cells: {}
+         vars:
+            pod_name: lab1
+            pod_type: workload_domain
+            mgmt_pod: mp
+            core_bgp_asn: '100'
+            tor_bgp_asn: '101'
+            tor_ospf_area: '101'
+            nsxt_bgp_asn: '1010'
+            datacenter_name: lab1
+            domain_name: harrythambi.cloud
+            target_datastore: esx01_nvme01
+            docker_local_mount_path: /mnt/files
+            syslog_server: 192.168.0.125
+            pod_mtu: '9000'
+            dns_1: 10.20.0.10
+            dns_2: 192.168.0.1
+            time_zone: GMT Standard Time
+            time1: 0.uk.pool.ntp.org
+            time2: 1.uk.pool.ntp.org
+            networks:
+               subnets:
+               -  name: lab1_mgmt
+                  network_cidr: 10.1.110.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.110.0
+                  gateway: 10.1.110.1
+                  cidr: 24
+                  vlan: 110
+                  trunk: false
+                  domain: management_domain
+                  vsswitch: vSwitch0
+                  vdswitch: vds_mp
+                  vmnics:
+                  - vmnic0
+               -  name: lab1_dmz
+                  network_cidr: 10.1.111.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.111.0
+                  gateway: 10.1.111.1
+                  cidr: 24
+                  vlan: 111
+                  trunk: false
+                  domain: management_domain
+                  vsswitch: vSwitch0
+                  vdswitch: vds_mp
+                  vmnics:
+                  - vmnic0
+               -  name: lab1_trunk_a
+                  vlan: 0-4094
+                  trunk: true
+                  domain: management_domain
+                  vsswitch: vSwitch0
+                  vdswitch: vds_mp
+                  vmnics:
+                  - vmnic0
+               -  name: lab1_trunk_b
+                  vlan: 0-4094
+                  trunk: true
+                  domain: management_domain
+                  vsswitch: vSwitch0
+                  vdswitch: vds_mp
+                  vmnics:
+                  - vmnic0
+               -  name: lab1_vmware
+                  network_cidr: 10.1.112.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.112.0
+                  gateway: 10.1.112.1
+                  cidr: 24
+                  vlan: 112
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_vmotion
+                  network_cidr: 10.1.113.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.113.0
+                  gateway: 10.1.113.1
+                  cidr: 24
+                  vlan: 113
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_storage
+                  network_cidr: 10.1.114.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.114.0
+                  gateway: 10.1.114.1
+                  cidr: 24
+                  vlan: 114
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_edge_overlay_tep
+                  network_cidr: 10.1.115.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.115.0
+                  gateway: 10.1.115.1
+                  cidr: 24
+                  vlan: 115
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+                  tags: nsxt_edge_overlay_network
+               -  name: lab1_host_overlay_tep
+                  network_cidr: 10.1.116.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.116.0
+                  gateway: 10.1.116.1
+                  cidr: 24
+                  vlan: 116
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+                  tags: nsxt_host_overlay_network
+               -  name: lab1_edge_uplink_1
+                  network_cidr: 10.1.117.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.117.0
+                  gateway: 10.1.117.1
+                  cidr: 24
+                  vlan: 117
+                  trunk: true
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_edge_uplink_2
+                  network_cidr: 10.1.118.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.118.0
+                  gateway: 10.1.118.1
+                  cidr: 24
+                  vlan: 118
+                  trunk: true
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_vxlan
+                  network_cidr: 10.1.120.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.120.0
+                  gateway: 10.1.120.1
+                  cidr: 24
+                  vlan: 120
+                  trunk: false
+                  domain: workload_domain
+                  vdswitch: vds_lab1
+                  vmnics:
+                  - vmnic0
+                  - vmnic1
+               -  name: lab1_seg_nsxalb_se_mgmt
+                  network_cidr: 10.1.121.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.121.0
+                  gateway: 10.1.121.1
+                  cidr: 24
+                  domain: nsxt_workload_domain
+                  tier1_connected: true
+               -  name: lab1_seg_nsxalb_se_data
+                  network_cidr: 10.1.122.1/24
+                  netmask: 255.255.255.0
+                  network: 10.1.122.0
+                  gateway: 10.1.122.1
+                  cidr: 24
+                  domain: nsxt_workload_domain
+                  tier1_connected: true
+               -  name: lab1_vcd_frontend
+                  network_cidr: 10.1.123.1/25
+                  netmask: 255.255.255.128
+                  network: 10.1.123.0
+                  gateway: 10.1.123.1
+                  cidr: 25
+                  domain: nsxt_workload_domain
+                  tier1_connected: true
+               -  name: lab1_vcd_backend
+                  network_cidr: 10.1.123.129/25
+                  netmask: 255.255.255.128
+                  network: 10.1.123.128
+                  gateway: 10.1.123.129
+                  cidr: 25
+                  domain: nsxt_workload_domain
+                  tier1_connected: false
+               vmks:
+               -  name: vmk0
+                  enable_mgmt: true
+                  enable_vmotion: false
+                  enable_vsan: false
+                  enable_ft: false
+               -  name: vmk1
+                  enable_mgmt: false
+                  enable_vmotion: true
+                  enable_vsan: false
+                  enable_ft: false
+               -  name: vmk2
+                  enable_mgmt: false
+                  enable_vmotion: false
+                  enable_vsan: true
+                  enable_ft: false
+               portgroup_config:
+                  pg_policies_security:
+                     promiscuous: false
+                     forged_transmits: false
+                     mac_changes: false
+                  pg_policies_security_trunk:
+                     inherited: false
+                     promiscuous: true
+                     forged_transmits: true
+                     mac_changes: true
+                  pg_properties:
+                     block_override: true
+                     ipfix_override: false
+                     live_port_move: false
+                     network_rp_override: false
+                     port_config_reset_at_disconnect: true
+                     security_override: false
+                     uplink_teaming_override: false
+                     vendor_config_override: false
+                     vlan_override: false
+            nsxt:
+               nsxt_transport_zones:
+               -  name: lab1_tz_overlay_01
+                  description: Transport Zone for Overlay traffic
+                  transport_type: OVERLAY
+                  teaming_policy: null
+                  tags: edge,host
+               -  name: lab1_tz_host_vlan_01
+                  description: Transport Zone for Host vlan traffic
+                  transport_type: VLAN
+                  teaming_policy: null
+                  tags: host
+               -  name: lab1_tz_edge_vlan_01
+                  description: Transport Zone for Edge vlan traffic
+                  transport_type: VLAN
+                  teaming_policy:
+                  - uplink1
+                  - uplink2
+                  tags: edge
+               nsxt_ip_pools:
+               -  name: lab1_edge_overlay_tep
+                  network: 10.1.115.0
+                  gateway: 10.1.115.1
+                  cidr: 24
+                  ip_pool_start: 10.1.115.10
+                  ip_pool_end: 10.1.115.49
+               -  name: lab1_host_overlay_tep
+                  network: 10.1.116.0
+                  gateway: 10.1.116.1
+                  cidr: 24
+                  ip_pool_start: 10.1.116.10
+                  ip_pool_end: 10.1.116.49
+               nsxt_uplink_profiles:
+               -  name: lab1_upp_edge_01
+                  description: lab1_edge_overlay_tep
+                  teaming_policy: LOADBALANCE_SRCID
+                  teaming_policy_active_uplinks:
+                  - uplink1
+                  - uplink2
+                  named_teaming_policy:
+                  -  name: uplink1
+                     policy: FAILOVER_ORDER
+                     active_list:
+                     -  uplink_name: uplink1
+                        uplink_type: PNIC
+                  -  name: uplink2
+                     policy: FAILOVER_ORDER
+                     active_list:
+                     -  uplink_name: uplink2
+                        uplink_type: PNIC
+                  transport_vlan: 115
+               -  name: lab1_upp_host_01
+                  description: lab1_host_overlay_tep
+                  teaming_policy: LOADBALANCE_SRCID
+                  teaming_policy_active_uplinks:
+                  - uplink1
+                  - uplink2
+                  transport_vlan: 116
+               nsxt_transport_node_profiles:
+               -  name: lab1_host_tnp_01
+                  description: Host Transport Node Profile
+                  uplink_profile: lab1_upp_host_01
+                  transport_zones:
+                  - lab1_tz_overlay_01
+                  - lab1_tz_host_vlan_01
+                  switch_name: vds_lab1
+                  switch_type: VDS
+                  uplink1: Uplink 1
+                  uplink2: Uplink 2
+                  ip_pool_name: lab1_host_overlay_tep
+               nsxt_transport_node_clusters:
+               -  cluster_name: lab1_edge_compute
+                  transport_node_profile: lab1_host_tnp_01
+               nsxt_segments:
+               -  name: lab1_edge_trunk_uplink_1
+                  description: lab1_edge_trunk_uplink_1
+                  transport_zone: lab1_tz_host_vlan_01
+                  replication_mode: MTEP
+                  vlan_ids: 0-4094
+                  type: VLAN
+               -  name: lab1_edge_trunk_uplink_2
+                  description: lab1_edge_trunk_uplink_2
+                  transport_zone: lab1_tz_host_vlan_01
+                  replication_mode: MTEP
+                  vlan_ids: 0-4094
+                  type: VLAN
+               -  name: lab1_seg_edge_uplink_vlan_117
+                  description: lab1_edge_uplink_1
+                  transport_zone: lab1_tz_edge_vlan_01
+                  replication_mode: MTEP
+                  vlan_ids: 117
+                  type: VLAN
+                  teaming_policy: uplink1
+               -  name: lab1_seg_edge_uplink_vlan_118
+                  description: lab1_edge_uplink_2
+                  transport_zone: lab1_tz_edge_vlan_01
+                  replication_mode: MTEP
+                  vlan_ids: 118
+                  type: VLAN
+                  teaming_policy: uplink2
+               -  name: lab1_seg_nsxalb_se_mgmt
+                  description: lab1_seg_nsxalb_se_mgmt
+                  transport_zone: lab1_tz_overlay_01
+                  subnets_cidr: 10.1.121.1/24
+                  replication_mode: MTEP
+                  type: OVERLAY
+                  gw_tier: 1
+                  gw_name: lab1-t1-management
+                  dhcp: 1
+                  dhcp_profile_name: lab1-nsxalb-dhcp-server-profile
+               -  name: lab1_seg_nsxalb_se_data
+                  description: lab1_seg_nsxalb_se_data
+                  transport_zone: lab1_tz_overlay_01
+                  subnets_cidr: 10.1.122.1/24
+                  replication_mode: MTEP
+                  type: OVERLAY
+                  gw_tier: 1
+                  gw_name: lab1-t1-management
+                  dhcp: 1
+                  dhcp_profile_name: lab1-nsxalb-dhcp-server-profile
+               -  name: lab1_vcd_frontend
+                  description: lab1_vcd_frontend
+                  transport_zone: lab1_tz_overlay_01
+                  subnets_cidr: 10.1.123.1/25
+                  replication_mode: MTEP
+                  type: OVERLAY
+                  gw_tier: 1
+                  gw_name: lab1-t1-management
+                  dhcp: 0
+               -  name: lab1_vcd_backend
+                  description: lab1_vcd_backend
+                  transport_zone: lab1_tz_overlay_01
+                  subnets_cidr: 10.1.123.129/25
+                  replication_mode: MTEP
+                  type: OVERLAY
+                  dhcp: 0
+               nsxt_dhcp_profiles:
+               -  name: lab1-nsxalb-dhcp-server-profile
+                  cidr: 192.168.255.253/30
+                  edge_cluster_name: lab1_edgecluster01
+               nsxt_tier1s:
+               -  name: lab1-t1-management
+                  description: lab1-t1-gw-1
+                  failover_mode: NON_PREEMPTIVE
+                  pool_allocation: ROUTING
+                  t0_name: lab1-t0-gw-1
+                  edge_cluster_name: lab1_edgecluster01
+                  dhcp_config_name: lab1-nsxalb-dhcp-server-profile
+            components:
+               vyos:
+                  filename: vyos.ova
+               vcenter:
+                  license: 04214-492E2-488G5-0K9R4-A46QM
+                  filename: VMware-vCenter-Server-Appliance-7.0.3.01200-20990077_OVF10.ova
+               centos:
+                  filename: CentOS-7-x86_64-Minimal-2009.iso
+               esxi:
+                  license: 4H625-2TW92-488G8-0WVA2-DJP50
+                  filename: Nested_ESXi7.0u3c_Appliance_Template_v1.ova
+               nsxt:
+                  license: K109K-4N0DL-T8AD9-0TC0K-1XCLJ
+                  filename: nsx-unified-appliance-4.0.1.1.0.20598732.ova
+               avi:
+                  license: xxxx-xxxx-xxxx-xxxx-xxxx
+                  filename: controller-22.1.3-9096.ova
+                  api_version: 22.1.3
+               vcd:
+                  license: xxxx-xxxx-xxxx-xxxx-xxxx
+                  filename: VMware_Cloud_Director-10.4.1.9057-20912720_OVF10.ova
+      vyos_router:
+         children:
+            lab1_vyos_router: {}
+      esxi_edge_compute_hosts:
+         children:
+            lab1_esxi_edge_compute_hosts: {}
+      mgmt_vcenter:
+         children:
+            lab1_mgmt_vcenter: {}
+      nsxt_manager:
+         children:
+            lab1_nsxt_manager: {}
+      nsxt_edge_nodes:
+         children:
+            lab1_nsxt_edge_nodes: {}
+      nsxt_tier0_gws:
+         children:
+            lab1_nsxt_tier0_gws: {}
+      nsxt_tier0_vrf_gws:
+         children:
+            lab1_nsxt_tier0_vrf_gws: {}
+      avi_controller:
+         children:
+            lab1_avi_controller: {}
+      cloud_director_nfs:
+         children:
+            lab1_cloud_director_nfs: {}
+      cloud_director_postgres_cells:
+         children:
+            lab1_cloud_director_postgres_cells: {}
+lab1_vyos_router:
+   hosts:
+      lab1-vyos-1.harrythambi.cloud:
+         network_adapters:
+         -  name: mp_mgmt
+            label: Network adpater 1
+            ip: 10.20.0.18
+            dns_name: lab1-vyos-1.harrythambi.cloud
+            alias: eth0 Network
+            tags:
+            - mgmt_interface
+         -  name: lab1_mgmt
+            label: Network adpater 2
+            ip: 10.1.110.2
+            alias: eth1 Network
+            tags:
+            - lab1_mgmt
+         -  name: lab1_trunk_a
+            label: Network adpater 3
+            alias: eth2 Network
+            tags:
+            - none
+         -  name: lab1_dmz
+            label: Network adpater 4
+            ip: 10.1.111.2
+            alias: eth3 Network
+            tags:
+            - lab1_dmz
+         tor: 1
+         tor_priority: 200
+      lab1-vyos-2.harrythambi.cloud:
+         network_adapters:
+         -  name: mp_mgmt
+            label: Network adpater 1
+            ip: 10.20.0.19
+            dns_name: lab1-vyos-2.harrythambi.cloud
+            alias: eth0 Network
+            tags:
+            - mgmt_interface
+         -  name: lab1_mgmt
+            label: Network adpater 2
+            ip: 10.1.110.3
+            alias: eth1 Network
+            tags:
+            - lab1_mgmt
+         -  name: lab1_trunk_b
+            label: Network adpater 3
+            alias: eth2 Network
+            tags:
+            - none
+         -  name: lab1_dmz
+            label: Network adpater 4
+            ip: 10.1.111.3
+            alias: eth3 Network
+            tags:
+            - lab1_dmz
+         tor: 2
+         tor_priority: 100
+   vars:
+      credentials:
+         vyos: VMware1!VMware1!
+         admin: VMware1!VMware1!
+         audit: VMware1!VMware1!
+      ansible_user: vyos
+      ansible_ssh_pass: VMware1!VMware1!
+      root_password: VMware1!VMware1!
+      routers_vip: 10.20.0.17
+lab1_esxi_edge_compute_hosts:
+   hosts:
+      lab1-esxi-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vmware
+            label: vmk0
+            ip: 10.1.112.4
+            dns_name: lab1-esxi-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         -  name: lab1_vmotion
+            label: vmk1
+            ip: 10.1.113.4
+            alias: none
+            tags:
+            - none
+         -  name: lab1_storage
+            label: vmk2
+            ip: 10.1.114.4
+            alias: none
+            tags:
+            - none
+         nested_network_adapters:
+         -  name: lab1_trunk_a
+            label: Network adapter 1
+         -  name: lab1_trunk_b
+            label: Network adapter 2
+      lab1-esxi-2.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vmware
+            label: vmk0
+            ip: 10.1.112.5
+            dns_name: lab1-esxi-2.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         -  name: lab1_vmotion
+            label: vmk1
+            ip: 10.1.113.5
+            alias: none
+            tags:
+            - none
+         -  name: lab1_storage
+            label: vmk2
+            ip: 10.1.114.5
+            alias: none
+            tags:
+            - none
+         nested_network_adapters:
+         -  name: lab1_trunk_a
+            label: Network adapter 1
+         -  name: lab1_trunk_b
+            label: Network adapter 2
+      lab1-esxi-3.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vmware
+            label: vmk0
+            ip: 10.1.112.6
+            dns_name: lab1-esxi-3.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         -  name: lab1_vmotion
+            label: vmk1
+            ip: 10.1.113.6
+            alias: none
+            tags:
+            - none
+         -  name: lab1_storage
+            label: vmk2
+            ip: 10.1.114.6
+            alias: none
+            tags:
+            - none
+         nested_network_adapters:
+         -  name: lab1_trunk_a
+            label: Network adapter 1
+         -  name: lab1_trunk_b
+            label: Network adapter 2
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+      datacenter_name: ha-datacenter
+      cluster: lab1_edge_compute
+      nested_esxi_ova: true
+      ansible_user: root
+      ansible_ssh_pass: VMware1!VMware1!
+      ansible_password: VMware1!VMware1!
+      vm_cpu_cores: 8
+      vm_memory_gb: 32
+      target_datastore: esx01_nvme01
+lab1_mgmt_vcenter:
+   hosts:
+      lab1-vcsa-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_mgmt
+            label: Network adapter 1
+            ip: 10.1.110.13
+            dns_name: lab1-vcsa-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         managed_clusters:
+         -  name: lab1_edge_compute
+            vsan_datastore_name: vsanDatastore
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+         Administrator: VMware1!VMware1!
+      labvm_networks_on_mp_mgmt_vcenter: true
+      vsan_cache_disk_size: 60
+      vsan_capacity_disk_size: 600
+      vsan_cache_disk_datastore: esx01_nvme01
+      vsan_capacity_disk_datastore: esx01_nvme01
+      deployment_option: tiny
+      site_name: lab1
+      sso_domain: vsphere.local
+      sso_admin: Administrator
+      sso_primary: true
+lab1_nsxt_manager:
+   hosts:
+      lab1-nsxtlmgr-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_mgmt
+            label: Network adapter 1
+            ip: 10.1.110.15
+            dns_name: lab1-nsxtlmgr-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+         admin: VMware1!VMware1!
+         audit: VMware1!VMware1!
+      labvm_networks_on_mp_mgmt_vcenter: true
+      nsx_role: NSX Manager
+      deployment_option: small
+      ansible_user: root
+      ansible_ssh_pass: VMware1!VMware1!
+      root_password: VMware1!VMware1!
+lab1_nsxt_edge_nodes:
+   hosts:
+      lab1-nsxtedge-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vmware
+            label: Network adapter 1
+            ip: 10.1.112.21
+            dns_name: lab1-nsxtedge-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         -  name: lab1_edge_uplink_1
+            label: Network adapter 2
+            ip: 10.1.117.21
+            alias: none
+            tags:
+            - edge_uplink_1
+         -  name: lab1_edge_uplink_2
+            label: Network adapter 3
+            ip: 10.1.118.21
+            alias: none
+            tags:
+            - edge_uplink_2
+      lab1-nsxtedge-2.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vmware
+            label: Network adapter 1
+            ip: 10.1.112.22
+            dns_name: lab1-nsxtedge-2.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         -  name: lab1_edge_uplink_1
+            label: Network adapter 2
+            ip: 10.1.117.22
+            alias: none
+            tags:
+            - edge_uplink_1
+         -  name: lab1_edge_uplink_2
+            label: Network adapter 3
+            ip: 10.1.118.22
+            alias: none
+            tags:
+            - edge_uplink_2
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+         admin: VMware1!VMware1!
+         audit: VMware1!VMware1!
+      cluster: lab1_edgecluster01
+      nsxt_uplink_profile: lab1_upp_edge_01
+      nsxt_transport_zones:
+      - lab1_tz_overlay_01
+      - lab1_tz_edge_vlan_01
+      nsxt_ip_pool_name: lab1_edge_overlay_tep
+      deployment_option: small
+      ansible_user: root
+      ansible_ssh_pass: VMware1!VMware1!
+      root_password: VMware1!VMware1!
+      target_datastore: shared_datastore
+      target_compute_cluster: lab1_edge_compute
+lab1_nsxt_tier0_gws:
+   hosts:
+      lab1-t0-gw-1:
+         interfaces:
+         -  name: lab1-nsxtedge-1-lab1_edge_uplink_1
+            description: lab1_edge_uplink_1
+            ip_address: 10.1.117.4
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_1
+            bgp_neighbor_ip: 10.1.117.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_117
+            edge_tn_name: lab1-nsxtedge-1
+         -  name: lab1-nsxtedge-2-lab1_edge_uplink_1
+            description: lab1_edge_uplink_1
+            ip_address: 10.1.117.5
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_1
+            bgp_neighbor_ip: 10.1.117.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_117
+            edge_tn_name: lab1-nsxtedge-2
+         -  name: lab1-nsxtedge-1-lab1_edge_uplink_2
+            description: lab1_edge_uplink_2
+            ip_address: 10.1.118.4
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_2
+            bgp_neighbor_ip: 10.1.118.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_118
+            edge_tn_name: lab1-nsxtedge-1
+         -  name: lab1-nsxtedge-2-lab1_edge_uplink_2
+            description: lab1_edge_uplink_2
+            ip_address: 10.1.118.5
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_2
+            bgp_neighbor_ip: 10.1.118.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_118
+            edge_tn_name: lab1-nsxtedge-2
+   vars:
+      edge_cluster_name: lab1_edgecluster01
+      ha_mode: ACTIVE_ACTIVE
+      failover_mode: NON_PREEMPTIVE
+      bgp_vars:
+         bgp_enabled: true
+         bgp_local_asn: 1010
+lab1_nsxt_tier0_vrf_gws:
+   hosts:
+      lab1-t0-gw-vrf-1:
+         interfaces:
+         -  name: lab1-nsxtedge-1-lab1_edge_uplink_1
+            description: lab1_edge_uplink_1
+            ip_address: 10.1.117.6
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_1
+            bgp_neighbor_ip: 10.1.117.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_117
+            edge_tn_name: lab1-nsxtedge-1
+         -  name: lab1-nsxtedge-2-lab1_edge_uplink_1
+            description: lab1_edge_uplink_1
+            ip_address: 10.1.117.7
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_1
+            bgp_neighbor_ip: 10.1.117.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_117
+            edge_tn_name: lab1-nsxtedge-2
+         -  name: lab1-nsxtedge-1-lab1_edge_uplink_2
+            description: lab1_edge_uplink_2
+            ip_address: 10.1.118.6
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_2
+            bgp_neighbor_ip: 10.1.118.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_118
+            edge_tn_name: lab1-nsxtedge-1
+         -  name: lab1-nsxtedge-2-lab1_edge_uplink_2
+            description: lab1_edge_uplink_2
+            ip_address: 10.1.118.7
+            ip_prefix: 24
+            bgp_neighbor_name: lab1_edge_uplink_2
+            bgp_neighbor_ip: 10.1.118.1
+            bgp_local_asn: 1010
+            bgp_remote_asn: 101
+            segment_name: lab1_seg_edge_uplink_vlan_118
+            edge_tn_name: lab1-nsxtedge-2
+   vars:
+      edge_cluster_name: lab1_edgecluster01
+      ha_mode: ACTIVE_ACTIVE
+      failover_mode: NON_PREEMPTIVE
+      bgp_vars:
+         bgp_enabled: true
+         bgp_local_asn: 1010
+lab1_avi_controller:
+   hosts:
+      lab1-nsxalbc-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_mgmt
+            label: Network adapter 1
+            ip: 10.1.110.26
+            dns_name: lab1-nsxalbc-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+   vars:
+      credentials:
+         admin: VMware1!VMware1!
+      ansible_user: admin
+      ansible_ssh_pass: VMware1!VMware1!
+      vip: 10.1.110.25
+      vip_dns: lab1-nsxalbc.harrythambi.cloud
+lab1_cloud_director_nfs:
+   hosts:
+      lab1-nfsvcd-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_mgmt
+            label: Network adapter 1
+            ip: 10.1.110.30
+            dns_name: lab1-nfsvcd-1.harrythambi.cloud
+            alias: none
+            tags:
+            - mgmt_interface
+         diskcontrollers:
+         -  diskcontroller: lsilogicsas
+            disks:
+            -  size: 128
+            -  size: 1024
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+      vmware_os: centos7_64Guest
+      join_ad: false
+      vm_memory_gb: 2
+      vm_num_cpus: 2
+      ansible_user: root
+      ansible_ssh_pass: VMware1!VMware1!
+      root_password: VMware1!VMware1!
+      ansible_become: true
+      ansible_become_pass: VMware1!VMware1!
+lab1_cloud_director_postgres_cells:
+   hosts:
+      lab1-vcd-1.harrythambi.cloud:
+         network_adapters:
+         -  name: lab1_vcd_frontend
+            label: Network adapter 1
+            ip: 10.1.123.32
+            dns_name: lab1-vcd-1.harrythambi.cloud
+            alias: eth0 Network
+            tags:
+            - frontend_interface
+         -  name: lab1_vcd_backend
+            label: Network adapter 1
+            ip: 10.1.123.160
+            alias: eth1 Network
+            tags:
+            - backend_interface
+   vars:
+      credentials:
+         root: VMware1!VMware1!
+         Administrator: VMware1!VMware1!
+         vcloud_db: VMware1!VMware1!
+      deployment_option: primary-small
+      site-name: lab1
+      vcloud_install_id: 1
+      ansible_user: root
+      ansible_ssh_pass: VMware1!VMware1!
+      root_password: VMware1!VMware1!
+      vcloud_admin_pw: VMware1!VMware1!
+      vcloud_db_pw: VMware1!VMware1!
+      domain_deployment: workload_domain
+      target_datastore: shared_datastore
+      vip: 10.1.123.31
+      vip_dns: lab1-vcd.harrythambi.cloud

@@ -1,0 +1,48 @@
+mp_vcenter:
+  hosts:
+    mp-vcsa01.harrythambi.cloud:
+      credentials:
+        administrator: 'VMware1!VMware1!'
+      sso_domain: 'vsphere.local'
+  
+lab1_nsxt_local_manager:
+  hosts:
+    lab1-nsxtlmgr-1.harrythambi.cloud:
+      network_adapters:
+        - name: 'lab1_mgmt'
+          ip: '10.1.110.15'
+          netmask: '255.255.255.0'
+          gateway: '10.1.110.1'
+          tags:
+            - mgmt_interface
+  vars:
+    deployment_type: 'small'
+    credentials:
+      root: 'VMware1!VMware1!'
+      admin: 'VMware1!VMware1!'
+      audit: 'VMware1!VMware1!'
+    nsx_role: 'NSX Manager'
+
+all:
+  children:
+    mp:
+      children:
+        mp_vcenter:
+      vars:
+        datacenter: 'mp'
+    lab1:
+      children:
+        lab1_nsxt_local_manager:
+      vars:
+        datacenter: 'lab1'
+        lab_name: 'lab1'
+        target_datastore: 'esx01_nvme01'
+        components:
+          file_path: '/mnt/files/'
+          nsxt:
+            ova_filename: 'nsx-unified-appliance-4.0.1.1.0.20598732.ova'
+  vars:
+    dns: '10.20.0.10'
+    domain: 'harrythambi.cloud'
+    time1: '0.uk.pool.ntp.org'
+    time2: '1.uk.pool.ntp.org'

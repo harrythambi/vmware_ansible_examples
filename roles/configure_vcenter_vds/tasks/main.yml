@@ -1,0 +1,23 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: Create a VDS
+  delegate_to: localhost
+  vmware_dvswitch:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    switch_name: '{{ item.vdswitch }}'
+    mtu: '9000'
+    uplink_quantity: '{{ item.vmnics|length|int }}'
+    state: 'present'
+    discovery_proto: 'cdp'
+    discovery_operation: 'listen'
+    switch_version: '{{ vds_switch_version }}'
+  loop: '{{ networks_subnets }}'

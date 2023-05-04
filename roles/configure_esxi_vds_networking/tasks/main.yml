@@ -1,0 +1,44 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: List of VDS
+  set_fact: 
+    vds_list: "{{ (vds_list | default([]) + [item.vdswitch]) | unique }}"
+  loop: "{{ networks.subnets }}"
+  when: item.domain == pod_type
+
+- name: Add ESXi Host to VDS
+  delegate_to: localhost
+  vmware_dvs_host:
+    <<: *vsphere_login
+    esxi_hostname: '{{ inventory_hostname }}'
+    switch_name: "{{ item }}"
+    state: 'present'
+  delegate_to: localhost
+  with_items: '{{vds_list}}' 
+
+- name: Update vmk0 for only management (when using William lam ESXi Appliances)
+  import_role:
+    name: update_esxi_vmkernel
+  when: nested_ova_true | default(false)
+  vars:
+    - vmkernel: vmk0
+
+- name: Migrate lab hosts vmk0 to Management VDS
+  import_role:
+    name: configure_esxi_migrate_vmk_to_mgmt_vds
+  vars:
+    - vmkernel: vmk0
+    - dvportgroup: "{% for na in network_adapters %}{% if vmkernel == na.label %}{{na.name}}{% endif %}{% endfor %}" 
+    - dvswitch: "{% for s in networks_subnets %}{% if dvportgroup == s.name %}{{s.vdswitch}}{% endif %}{% endfor %}" 
+
+- name: Create vmkernels
+  import_role:
+    name: configure_esxi_vds_vmkernels

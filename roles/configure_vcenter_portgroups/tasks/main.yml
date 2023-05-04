@@ -1,0 +1,66 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: Create VDS Non Trunk portgroups
+  delegate_to: localhost
+  community.vmware.vmware_dvs_portgroup:
+    <<: *vsphere_login
+    portgroup_name: '{{ item.name }}'
+    switch_name: '{{ item.vdswitch }}'
+    vlan_id: '{{ item.vlan }}'
+    vlan_trunk: '{{ item.trunk }}'
+    num_ports: '128'
+    port_binding: ephemeral
+    state: 'present'
+    port_policy:
+      block_override: true
+      ipfix_override: false
+      live_port_move: false
+      network_rp_override: false
+      port_config_reset_at_disconnect: true
+      security_override: false
+      uplink_teaming_override: false
+      vendor_config_override: false
+      vlan_override: false
+  loop: '{{ networks_subnets }}'
+  when:
+    - item.trunk is defined
+    - not item.trunk
+
+- name: Create vdSwitch Trunk portgroups
+  delegate_to: localhost
+  community.vmware.vmware_dvs_portgroup:
+    <<: *vsphere_login
+    portgroup_name: '{{ item.name }}'
+    switch_name: '{{ item.vdswitch }}'
+    vlan_id: '0-4094'
+    vlan_trunk: '{{ item.trunk }}'
+    num_ports: '128'
+    port_binding: static
+    state: 'present'
+    network_policy:
+      inherited: false
+      promiscuous: true
+      forged_transmits: true
+      mac_changes: true
+    port_policy:
+      block_override: true
+      ipfix_override: false
+      live_port_move: false
+      network_rp_override: false
+      port_config_reset_at_disconnect: true
+      security_override: false
+      uplink_teaming_override: false
+      vendor_config_override: false
+      vlan_override: false
+  loop: '{{ networks_subnets }}'
+  when:
+    - item.trunk is defined
+    - item.trunk

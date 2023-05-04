@@ -1,0 +1,32 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: 'Add an ESXi server to a cluster'
+  delegate_to: localhost
+  vmware_host:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    cluster_name: '{{ esxi_cluster_name }}'
+    esxi_hostname: '{{ esxi_hostname }}'
+    esxi_username: '{{ esxi_username }}'
+    esxi_password: '{{ esxi_password }}'
+    state: 'present'
+  register: result
+  retries: 10
+  until: result is not failed
+
+- name: 'Add the ESXi license'
+  connection: 'local'
+  vcenter_license:
+    <<: *vsphere_login
+    esxi_hostname: '{{ esxi_hostname }}'
+    license: '{{ components.esxi.license }}'
+    labels: "{'ESXi': 'ESXi'}"
+    state: 'present'

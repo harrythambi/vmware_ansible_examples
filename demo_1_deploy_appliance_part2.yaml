@@ -1,0 +1,67 @@
+---
+
+- name: Deploy NSX-T Manager Appliance
+  gather_facts: false
+  hosts: lab1_nsxt_local_manager
+  vars:
+    vsphere_hostname: "{{groups['mp_vcenter'][0]}}"
+    vsphere_hostvars: "{{hostvars[vsphere_hostname]}}"
+    vsphere_username: "administrator@{{vsphere_hostvars.sso_domain}}"
+    vsphere_password: "{{vsphere_hostvars.credentials.administrator}}"
+    vsphere_datacenter: "{{vsphere_hostvars.datacenter}}"
+    ovf_path: "{{components.file_path}}{{components.nsxt.ova_filename}}"
+  tasks:
+    - name: Get Network Info
+      set_fact:
+        network_adapter: "{{ { 'Network 1': na.name } }}"
+        management_ip: "{{na.ip}}"
+        management_netmask: "{{na.netmask}}"
+        management_gateway: "{{na.gateway}}"
+      loop: "{{network_adapters}}"
+      loop_control:
+        loop_var: na
+      when: "'mgmt_interface' in na.tags"
+    - name: 'Deploy NSXT Manager'
+      delegate_to: localhost
+      community.vmware.vmware_deploy_ovf:
+        hostname: '{{vsphere_hostname}}'
+        username: '{{vsphere_username}}'
+        password: '{{vsphere_password}}'
+        validate_certs: false
+        name: '{{inventory_hostname_short}}'
+        folder: '{{vsphere_datacenter}}/vm/{{lab_name}}'
+        datastore: '{{target_datastore}}'
+        disk_provisioning: 'thin'
+        networks: '{{network_adapter}}'
+        ovf: '{{ovf_path}}'
+        power_on: 'yes'
+        deployment_option: '{{deployment_type}}'
+        fail_on_spec_warnings: 'yes'
+        wait_for_ip_address: 'no'
+        inject_ovf_env: 'true'
+        datacenter: '{{vsphere_datacenter}}'
+        properties:
+          nsx_hostname: '{{inventory_hostname}}'
+          nsx_role: '{{nsx_role}}'
+          nsx_ip_0: '{{management_ip}}'
+          nsx_netmask_0: '{{management_netmask}}'
+          nsx_gateway_0: '{{management_gateway}}'
+          nsx_dns1_0: '{{dns}}'
+          nsx_domain_0: '{{domain}}'
+          nsx_ntp_0: '{{time1}} {{time2}}'
+          nsx_passwd_0: '{{credentials.root}}'
+          nsx_cli_username: 'admin'
+          nsx_cli_passwd_0: '{{credentials.admin}}'
+          nsx_cli_audit_username: 'audit'
+          nsx_cli_audit_passwd_0: '{{credentials.audit}}'
+          nsx_isSSHEnabled: 'True'
+          nsx_allowSSHRootLogin: 'True'
+    - name: Check if NSX-T Manager is available
+      delegate_to: localhost
+      uri:
+        url: "https://{{inventory_hostname}}/login.jsp"
+        validate_certs: false
+      register: result
+      until: "result.status == 200"
+      retries: 50
+      delay: 10      

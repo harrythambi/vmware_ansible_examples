@@ -1,0 +1,13 @@
+---
+
+- name: 'Changing Shell To BASH'
+  block:
+    - meta: reset_connection
+    - name: Attempt to change shell mode (ignore errors)
+      raw: "shell chsh -s /bin/bash root"
+  rescue:
+    - meta: reset_connection
+    - name: Trying another method to change shell mode 
+      shell: "chsh -s /bin/bash root"
+  always:
+    - meta: reset_connection

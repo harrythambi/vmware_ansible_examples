@@ -1,0 +1,40 @@
+- name: List Edge Clusters
+  delegate_to: localhost
+  vmware.ansible_for_nsxt.nsxt_edge_clusters_facts:
+    hostname: "{{ nsxt_hostname }}"
+    username: "{{ nsxt_username }}"
+    password: "{{ nsxt_password }}"
+    validate_certs: "{{ validate_certs }}"
+  register: edge_clusters_output
+
+- name: Display edge_cluster_id
+  set_fact:
+    edge_cluster_id: "{{item.id}}"
+  loop: "{{ edge_clusters_output | community.general.json_query(edge_clusters) }}"
+  vars:
+    edge_clusters: "results[?display_name=='{{dhcp_profile.edge_cluster_name}}']" 
+
+- name: Create NSX-T DHCP Server Config
+  delegate_to: localhost
+  uri:
+    url: https://{{ nsxt_hostname }}/policy/api/v1/infra/dhcp-server-configs/{{dhcp_profile.name}}
+    method: PATCH
+    user: "{{ nsxt_username }}"
+    password: "{{ nsxt_password }}"
+    force_basic_auth: yes
+    status_code: 201,200
+    headers:
+      Accept: '*/*'
+      Content-Type:  'application/json'
+    body_format: json
+    body:
+      server_address: "{{dhcp_profile.cidr}}"
+      server_addresses:
+       - "{{dhcp_profile.cidr}}"
+      lease_time: 86400
+      edge_cluster_path: "/infra/sites/default/enforcement-points/default/edge-clusters/{{edge_cluster_id}}"
+      enable_standby_relocation: false
+      resource_type: "DhcpServerConfig"
+      id: "{{dhcp_profile.name}}"
+      display_name: "{{dhcp_profile.name}}"
+    validate_certs: "{{ validate_certs }}"

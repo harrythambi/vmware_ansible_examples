@@ -1,0 +1,2 @@
+- name: Migrate Management Hosts vmk0 to Management VDS
+  include_tasks: migrate_vmk_to_vds.yml

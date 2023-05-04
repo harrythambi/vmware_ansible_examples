@@ -1,0 +1,33 @@
+---
+
+- name: set facts
+  set_fact:
+    esxi_login: &esxi_login
+      hostname: '{{ esxi_hostname }}'
+      username: '{{ esxi_username }}'
+      password: '{{ esxi_password }}'
+      esxi_hostname: '{{ esxi_hostname }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: 'Configure ESXi NTP settings'
+  delegate_to: localhost
+  vmware_host_ntp:
+    <<: *esxi_login
+    state: 'present'
+    ntp_servers:
+      - '{{ time1 }}'
+      - '{{ time2 }}'
+  register: result
+  retries: 3
+  until: result is not failed
+
+- name: 'Start ntpd service for all ESXi Hosts'
+  delegate_to: localhost
+  vmware_host_service_manager:
+    <<: *esxi_login
+    state: 'present'
+    service_name: 'ntpd'
+    service_policy: 'on'
+  register: result
+  retries: 3
+  until: result is not failed

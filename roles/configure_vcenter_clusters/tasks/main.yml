@@ -1,0 +1,36 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: 'Create vCenter clusters'
+  delegate_to: localhost
+  vmware_cluster:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    cluster_name: '{{ item }}'
+    state: 'present'
+  loop: '{{ managed_clusters_list }}'
+
+- name: 'Enable DRS on each of the clusters'
+  delegate_to: localhost
+  vmware_cluster_drs:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    cluster_name: '{{ item }}'
+    enable: true
+  loop: '{{ managed_clusters_list }}'
+
+- name: 'Disable HA without admission control'
+  delegate_to: localhost
+  vmware_cluster_ha:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    cluster_name: '{{ item }}'
+    enable: false
+  loop: '{{ managed_clusters_list }}'

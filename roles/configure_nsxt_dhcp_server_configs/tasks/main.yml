@@ -1,0 +1,5 @@
+- name: Configure DHCP Server Configs
+  include_tasks: create_nsxt_dhcp_server_config.yml
+  loop: "{{nsxt.nsxt_dhcp_profiles}}"
+  loop_control:
+    loop_var: dhcp_profile

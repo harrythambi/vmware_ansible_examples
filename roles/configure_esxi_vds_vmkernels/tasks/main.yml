@@ -1,0 +1,30 @@
+---
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: Create a vmkernel interface
+  delegate_to: localhost
+  vmware_vmkernel:
+    <<: *vsphere_login
+    esxi_hostname: '{{ inventory_hostname }}'
+    dvswitch_name: "{% for subnet in networks.subnets %}{% if subnet.name == item.name %}{{subnet.vdswitch}}{% endif %}{% endfor %}"
+    portgroup_name: '{{ item.name }}'
+    enable_mgmt: "{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_mgmt}}{% endif %}{% endfor %}"
+    enable_vmotion: "{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{% if vmk.name == 'vmk0' and enable_vmotion_vmk0 is defined %}{{enable_vmotion_vmk0}}{% else %}{{vmk.enable_vmotion}}{% endif %}{% endif %}{% endfor %}" 
+    enable_vsan: "{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_vsan}}{% endif %}{% endfor %}" 
+    enable_ft:  "{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_ft}}{% endif %}{% endfor %}" 
+    mtu: '9000'
+    network:
+      type: 'static'
+      ip_address: '{{ item.ip }}'
+      subnet_mask: "{% for subnet in networks.subnets %}{% if subnet.name == item.name %}{{subnet.netmask}}{% endif %}{% endfor %}"
+    state: 'present'
+  register: result
+  retries: 3
+  until: result is not failed
+  loop: '{{ network_adapters }}'

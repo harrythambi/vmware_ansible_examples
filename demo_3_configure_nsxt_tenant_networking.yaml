@@ -1,0 +1,16 @@
+---
+
+- name: Configure NSX Tenant Networking
+  connection: local
+  gather_facts: False
+  hosts: 
+    - lab2_nsxt_local_manager
+  vars:
+    - nsxt_hostname: "{{ inventory_hostname }}"
+    - nsxt_username: "admin"
+    - nsxt_password: "{{ credentials.admin }}"
+    - validate_certs: false
+  roles:
+    - configure_nsxt_dhcp_server_configs
+    - configure_nsxt_t1_gw
+    - configure_nsxt_overlay_segments

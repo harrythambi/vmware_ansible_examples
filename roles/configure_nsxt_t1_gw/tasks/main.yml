@@ -1,0 +1,5 @@
+- name: Configure Overlay Segment
+  include_tasks: configure_nsxt_tier1_gw.yml
+  loop:  "{{nsxt.nsxt_tier1s}}"
+  loop_control:
+    loop_var: t1

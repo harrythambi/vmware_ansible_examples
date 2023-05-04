@@ -1,0 +1,14 @@
+---
+
+- name: Deploy NSX-T Manager Appliance
+  gather_facts: false
+  hosts: lab1_nsxt_local_manager
+  vars:
+    vsphere_hostname: "{{groups['mp_vcenter'][0]}}"
+    vsphere_hostvars: "{{hostvars[vsphere_hostname]}}"
+    vsphere_username: "administrator@{{vsphere_hostvars.sso_domain}}"
+    vsphere_password: "{{vsphere_hostvars.credentials.administrator}}"
+    vsphere_datacenter: "{{vsphere_hostvars.datacenter}}"
+    ovf_path: "{{components.file_path}}{{components.nsxt.ova_filename}}"
+  roles:
+    - deploy_nsx_manager

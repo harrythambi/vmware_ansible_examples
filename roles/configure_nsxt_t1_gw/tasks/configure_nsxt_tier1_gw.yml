@@ -1,0 +1,39 @@
+- name: Create NSX-T Tier-1 Gateway
+  delegate_to: localhost
+  vmware.ansible_for_nsxt.nsxt_policy_tier1:
+    hostname: "{{ nsxt_hostname }}"
+    username: "{{ nsxt_username }}"
+    password: "{{ nsxt_password }}"
+    validate_certs: "{{ validate_certs }}"
+    state: present
+    display_name: "{{ t1.name }}"
+    failover_mode: "{{ t1.failover_mode }}"
+    tier0_display_name: "{{ t1.t0_name }}"
+    pool_allocation: "{{ t1.pool_allocation }}"
+    # dhcp_config_display_name: "{{ t1.dhcp_config_name | default(omit) }}"
+    route_advertisement_types:
+      - TIER1_CONNECTED
+    locale_services:
+      - state: present
+        display_name: "T1-Gateway-01_Locale_Services"
+        description: "T1-Gateway-01 Locale Services Description"
+        edge_cluster_info:
+          edge_cluster_display_name: "{{ t1.edge_cluster_name }}"
+
+- name: Apply Tier 1 dhcp profile
+  delegate_to: localhost
+  ansible.builtin.uri:
+    url: "https://{{nsxt_hostname}}/policy/api/v1/infra/tier-1s/{{t1.name}}"
+    user: "{{nsxt_username}}"
+    password: "{{nsxt_password}}"
+    validate_certs: "{{validate_certs}}"    
+    method: PATCH
+    force_basic_auth: yes
+    headers:
+      Accept: 'application/json'    
+      Content-Type:  'application/json'    
+    body_format: json
+    body: 
+      dhcp_config_paths: 
+        - "/infra/dhcp-server-configs/{{t1.dhcp_config_name}}"
+  when: t1.dhcp_config_name is defined

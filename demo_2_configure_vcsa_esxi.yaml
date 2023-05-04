@@ -1,0 +1,73 @@
+---
+
+- name: Configure vCenter
+  connection: local
+  gather_facts: False
+  hosts: 
+    - lab1_vcenter
+  pre_tasks:
+    - include_vars: "{{playbook_dir~'/var_files/networks_subnets.yaml'}}"
+  vars:
+    - vsphere_hostname: "{{ inventory_hostname }}"
+    - vsphere_username: "administrator@{{ sso_domain }}"
+    - vsphere_password: "{{ credentials.administrator }}"
+    - datacenter_name: "{{ datacenter }}"
+    - managed_clusters_list: "{{ managed_clusters }}"
+    - vcenter_license: "{{ components.vcenter.license }}"
+    - vds_switch_version: "{{ components.vcenter.vds_switch_version }}"
+    - network_subnets: "{{ networks.subnets }}"
+  roles:
+    - update_vcenter_shell
+    - get_vcenter_health
+    - configure_vcenter_base
+    - configure_vcenter_clusters
+    - configure_vcenter_vds
+    - configure_vcenter_portgroups
+  tags:
+    - stage1
+
+- name: Configure Lab ESXi Hosts for vCenter
+  gather_facts: False
+  hosts:
+    - lab1_esxi_management_hosts  
+    - lab1_esxi_edge_hosts
+    - lab1_esxi_compute_hosts
+  vars:
+    - esxi_hostname: "{{ inventory_hostname }}"
+    - esxi_username: "root"
+    - esxi_password: "{{credentials.root}}"
+    - esxi_cluster_name: "{{ cluster }}"
+    - vsphere_hostname: "{{groups['lab1_vcenter'][0]}}"
+    - vsphere_host_meta: "{{ hostvars[vsphere_hostname] }}"
+    - vsphere_username: "administrator@{{ vsphere_host_meta.sso_domain }}"
+    - vsphere_password: "{{ vsphere_host_meta.credentials.administrator }}"
+    - datacenter_name: "{{ vsphere_host_meta.datacenter }}"
+    - networks_subnets: "{{ networks.subnets }}"
+  roles:
+    - configure_esxi_base
+    - add_esxi_to_vcenter_clusters
+  tags:
+    - stage2
+  
+- name: Configure ESXi Hosts Networking for vCenter
+  connection: local
+  gather_facts: False
+  hosts:
+    - lab1_esxi_management_hosts  
+    - lab1_esxi_edge_hosts
+    - lab1_esxi_compute_hosts
+  serial: 1
+  vars: 
+    - vsphere_hostname: "{{groups['lab1_vcenter'][0]}}"
+    - vsphere_host_meta: "{{ hostvars[vsphere_hostname] }}"
+    - vsphere_username: "administrator@{{ vsphere_host_meta.sso_domain }}"
+    - vsphere_password: "{{ vsphere_host_meta.credentials.administrator }}"   
+    - datacenter_name: "{{ vsphere_host_meta.datacenter }}"
+    - networks_subnets: "{{ networks.subnets }}"
+  roles:
+    - configure_esxi_vds_networking
+  tags:
+    - stage3
+
+
+    

@@ -1,0 +1,84 @@
+lab2_nsxt_local_manager:
+  hosts:
+    lab2-nsxtlmgr-1.harrythambi.cloud:
+      network_adapters:
+        - name: 'lab1_mgmt'
+          ip: '10.1.130.15'
+          netmask: '255.255.255.0'
+          gateway: '10.1.130.1'
+          tags:
+            - mgmt_interface
+  vars:
+    deployment_type: 'small'
+    credentials:
+      root: 'VMware1!VMware1!'
+      admin: 'VMware1!VMware1!'
+      audit: 'VMware1!VMware1!'
+    nsx_role: 'NSX Manager'
+
+all:
+  children:
+    lab2:
+      children:
+        lab2_nsxt_local_manager:
+      vars:
+        lab_name: 'lab2'
+        nsxt:
+          nsxt_transport_zones:
+            - name: lab2_tz_overlay_01
+              description: Transport Zone for Overlay traffic
+              transport_type: OVERLAY
+              teaming_policy: null
+              tags: edge,host
+          nsxt_dhcp_profiles:
+            - name: lab2-VMUG-Demo3-dhcp-server-profile
+              cidr: 192.168.254.253/30
+              edge_cluster_name: lab2_edgecluster01
+          nsxt_tier1s:
+            - name: lab2-t1-VMUG-Demo3-tenant01
+              description: lab2-t1-VMUG-Demo3-tenant01
+              failover_mode: NON_PREEMPTIVE
+              pool_allocation: ROUTING
+              t0_name: lab2-t0-gw-1
+              edge_cluster_name: lab2_edgecluster01
+              dhcp_config_name: lab2-VMUG-Demo3-dhcp-server-profile
+            - name: lab2-t1-VMUG-Demo3-tenant02
+              description: lab2-t1-VMUG-Demo3-tenant02
+              failover_mode: NON_PREEMPTIVE
+              pool_allocation: ROUTING
+              t0_name: lab2-t0-gw-1
+              edge_cluster_name: lab2_edgecluster01
+          nsxt_segments:
+            - name: lab2_seg_edge_uplink_vlan_137
+              description: lab2_edge_uplink_1
+              transport_zone: lab2_tz_edge_vlan_01
+              replication_mode: MTEP
+              vlan_ids: 137
+              type: VLAN
+              teaming_policy: uplink1
+            - name: lab2_seg_edge_uplink_vlan_138
+              description: lab2_edge_uplink_2
+              transport_zone: lab2_tz_edge_vlan_01
+              replication_mode: MTEP
+              vlan_ids: 138
+              type: VLAN
+              teaming_policy: uplink2
+            - name: lab2_seg_VMUG_Demo3_tenant01
+              description: lab2_seg_VMUG_Demo3_tenant01
+              transport_zone: lab2_tz_overlay_01
+              subnets_cidr: 10.1.148.1/24
+              replication_mode: MTEP
+              type: OVERLAY
+              gw_tier: 1
+              gw_name: lab2-t1-VMUG-Demo3-tenant01
+              dhcp: 1
+              dhcp_profile_name: lab2-VMUG-Demo3-dhcp-server-profile
+            - name: lab2_seg_VMUG_Demo3_tenant02
+              description: lab2_seg_VMUG_Demo3_tenant02
+              transport_zone: lab2_tz_overlay_01
+              subnets_cidr: 10.1.149.1/24
+              replication_mode: MTEP
+              type: OVERLAY
+              gw_tier: 1
+              gw_name: lab2-t1-VMUG-Demo3-tenant02
+              dhcp: 0

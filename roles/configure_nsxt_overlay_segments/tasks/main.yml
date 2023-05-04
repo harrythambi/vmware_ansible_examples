@@ -1,0 +1,6 @@
+- name: Configure Overlay Segment
+  include_tasks: configure_nsxt_overlay_segments.yml
+  loop: "{{nsxt.nsxt_segments}}"
+  loop_control:
+    loop_var: segment
+  when: "segment.type == 'OVERLAY'"

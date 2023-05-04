@@ -1,0 +1,45 @@
+- name: Update esxi vmkernel
+  delegate_to: localhost
+  vars:
+    pwsh_cmd: >- 
+      "{{ role_path }}/files/update_esxi_vmkernel.ps1 
+      -Server '{{ vsphere_host_meta.inventory_hostname }}' 
+      -Username '{{ vsphere_host_meta.sso_admin_username }}' 
+      -Password '{{ vsphere_host_meta.sso_admin_password }}' 
+      -VMHost '{{ inventory_hostname }}' 
+      -VirtualNic '{{ item.label }}' 
+      -EnableMgmt '{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_mgmt}}{% endif %}{% endfor %}'
+      -EnableVmotion '{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{% if vmk.name == 'vmk0' and enable_vmotion_vmk0 is defined %}{{enable_vmotion_vmk0}}{% else %}{{vmk.enable_vmotion}}{% endif %}{% endif %}{% endfor %}' 
+      -EnableVsan '{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_vsan}}{% endif %}{% endfor %}' 
+      -EnableFt '{% for vmk in networks.vmks %}{% if vmk.name == item.label %}{{vmk.enable_ft}}{% endif %}{% endfor %}' "
+    pwsh_cmd_enc: "{{ pwsh_cmd | string | b64encode(encoding='utf-16-le') }}"
+  # shell: pwsh -EncodedCommand {{ pwsh_cmd_enc }}
+  shell: pwsh -Command {{ pwsh_cmd }}
+  register: pwsh_result
+  retries: 3
+  until: pwsh_result is not failed
+  loop: '{{ network_adapters }}'
+  when: vmkernel is not defined
+
+
+- name: Update esxi vmkernel
+  delegate_to: localhost
+  vars:
+    pwsh_cmd: >
+      "{{ role_path }}/files/update_esxi_vmkernel.ps1 
+      -Server '{{ vsphere_host_meta.inventory_hostname }}' 
+      -Username '{{ vsphere_host_meta.sso_admin_username }}' 
+      -Password '{{ vsphere_host_meta.sso_admin_password }}' 
+      -VMHost '{{ inventory_hostname }}' 
+      -VirtualNic '{{ vmkernel }}' 
+      -EnableMgmt {% for vmk in networks.vmks %}{% if vmk.name == vmkernel %}{{vmk.enable_mgmt | int}}{% endif %}{% endfor %}
+      -EnableVmotion {% for vmk in networks.vmks %}{% if vmk.name == vmkernel %}{% if vmk.name == 'vmk0' and enable_vmotion_vmk0 is defined %}{{enable_vmotion_vmk0 | int }}{% else %}{{vmk.enable_vmotion | int }}{% endif %}{% endif %}{% endfor %} 
+      -EnableVsan {% for vmk in networks.vmks %}{% if vmk.name == vmkernel %}{{vmk.enable_vsan | int}}{% endif %}{% endfor %}
+      -EnableFt {% for vmk in networks.vmks %}{% if vmk.name == vmkernel %}{{vmk.enable_ft | int}}{% endif %}{% endfor %}"
+    pwsh_cmd_enc: "{{ pwsh_cmd | string | b64encode(encoding='utf-16-le') }}"
+  # shell: pwsh -EncodedCommand {{ pwsh_cmd_enc }}
+  shell: pwsh -Command {{ pwsh_cmd }}
+  register: pwsh_result
+  retries: 3
+  until: pwsh_result is not failed
+  when: vmkernel is defined

@@ -1,0 +1,50 @@
+---
+# https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_deploy_ovf_module.html
+
+- name: Deploy NSX-T Manager Appliance
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - name: 'Deploy NSXT Manager'
+      community.vmware.vmware_deploy_ovf:
+        hostname: 'mp-vcsa01.harrythambi.cloud'
+        username: 'administrator@vsphere.local'
+        password: 'VMware1!VMware1!'
+        validate_certs: false
+        name: 'lab1-nsxtmgr-1'
+        folder: 'mp/vm/lab1'
+        datastore: 'esx01_nvme01'
+        disk_provisioning: 'thin'
+        networks: {'Network 1': 'lab1_mgmt'}
+        ovf: '/mnt/files/nsx-unified-appliance-4.0.1.1.0.20598732.ova'
+        power_on: 'yes'
+        deployment_option: 'small'
+        fail_on_spec_warnings: 'yes'
+        wait_for_ip_address: 'no'
+        inject_ovf_env: 'true'
+        datacenter: 'mp'
+        properties:
+          nsx_hostname: 'lab1-nsxtlmgr-1.harrythambi.cloud'
+          nsx_role: 'NSX Manager'
+          nsx_ip_0: '10.1.110.15'
+          nsx_netmask_0: '255.255.255.0'
+          nsx_gateway_0: '10.1.110.1'
+          nsx_dns1_0: '10.20.0.10'
+          nsx_domain_0: 'harrythambi.cloud'
+          nsx_ntp_0: '0.uk.pool.ntp.org 1.uk.pool.ntp.org'
+          nsx_passwd_0: 'VMware1!VMware1!'
+          nsx_cli_username: 'admin'
+          nsx_cli_passwd_0: 'VMware1!VMware1!'
+          nsx_cli_audit_username: 'audit'
+          nsx_cli_audit_passwd_0: 'VMware1!VMware1!'
+          nsx_isSSHEnabled: 'True'
+          nsx_allowSSHRootLogin: 'True'
+    - name: Check if NSX-T Manager is available
+      delegate_to: localhost
+      uri:
+        url: "https://lab1-nsxtlmgr-1.harrythambi.cloud/login.jsp"
+        validate_certs: false
+      register: result
+      until: "result.status == 200"
+      retries: 50
+      delay: 10

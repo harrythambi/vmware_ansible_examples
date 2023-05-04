@@ -1,0 +1,24 @@
+---
+
+- name: set facts
+  set_fact:
+    vsphere_login: &vsphere_login
+      hostname: '{{ vsphere_hostname }}'
+      username: '{{ vsphere_username }}'
+      password: '{{ vsphere_password }}'
+      validate_certs: '{{ validate_certs }}'
+
+- name: 'Add vCenter License'
+  delegate_to: localhost
+  vcenter_license:
+    <<: *vsphere_login
+    license: '{{ vcenter_license }}'
+    labels: "{'vCenter': 'vCenter'}"
+    state: 'present'
+
+- name: 'Create Datacenter'
+  delegate_to: localhost
+  vmware_datacenter:
+    <<: *vsphere_login
+    datacenter_name: '{{ datacenter_name }}'
+    state: 'present'

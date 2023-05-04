@@ -1,0 +1,25 @@
+- name: Get a list of vmnics for vds switch
+  set_fact:
+    vmnic_list: "{{ (vmnic_list + item.vmnics) | unique }}"
+  loop: "{{networks_subnets}}"
+  when: item.domain == pod_type
+  vars: 
+    vmnic_list: []
+
+- name: Migrate vmk to vds
+  delegate_to: localhost
+  vars:
+    pwsh_cmd: "{{ role_path }}/files/migrate_vmk_to_vds.ps1 -Server '{{ vsphere_host_meta.inventory_hostname }}' -Username '{{ vsphere_username }}' -Password '{{ vsphere_password }}' -VMHost '{{ inventory_hostname }}' -PhysicalNic '{{vmnic_list | join(',')}}' -VirtualNic '{{ vmkernel }}' -DvSwitch '{{ dvswitch }}' -DvPortGroup '{{ dvportgroup }}'"
+  shell: pwsh -Command {{ pwsh_cmd }}
+  register: pwsh_result
+  retries: 3
+  until: pwsh_result is not failed
+
+- name: Migrate additional vmnics to vds
+  delegate_to: localhost
+  vars:
+    pwsh_cmd: "{{ role_path }}/files/migrate_vmk_to_vds.ps1 -Server '{{ vsphere_host_meta.inventory_hostname }}' -Username '{{ vsphere_username }}' -Password '{{ vsphere_password }}' -VMHost '{{ inventory_hostname }}' -PhysicalNic '{{vmnic_list | join(',')}}' -VirtualNic '{{ vmkernel }}' -DvSwitch '{{ dvswitch }}' -DvPortGroup '{{ dvportgroup }}'"
+  shell: pwsh -Command {{ pwsh_cmd }}
+  register: pwsh_result
+  retries: 3
+  until: pwsh_result is not failed

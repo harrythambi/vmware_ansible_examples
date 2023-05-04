@@ -1,0 +1,9 @@
+---
+
+- name: 'Check vCenter services health'
+  shell: excluded="vmcam|vmware-imagebuilder|vmware-mbcs|vmware-netdumper|vmware-rbd-watchdog|vmware-vcha|vsan-dps"; for service in $(service-control --list | awk '{ print $1 }' | egrep -v $excluded); do service-control --status $service;  done
+  register: service_output
+  failed_when: '"Stopped:" in service_output.stdout_lines or "StartPending" in service_output.stdout_lines'
+  retries: 40
+  delay: 15
+  until: service_output is not failed

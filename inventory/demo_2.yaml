@@ -1,0 +1,233 @@
+lab1_vcenter:
+  hosts:
+    lab1-vcsa-1.harrythambi.cloud:
+      managed_clusters:
+        - lab1_esxi_management_hosts
+        - lab1_esxi_edge_hosts
+        - lab1_esxi_compute_hosts
+      credentials:
+        root: VMware1!VMware1!
+        administrator: VMware1!VMware1!
+      sso_domain: vsphere.local
+      ansible_user: "root"
+      ansible_ssh_pass: "{{credentials.root}}"
+            
+lab1_esxi_management_hosts:
+  hosts:
+    lab1-esxi-1.harrythambi.cloud:
+      cluster: lab1_esxi_management_hosts
+      credentials:
+        root: VMware1!VMware1!
+      esxi_username: root
+      network_adapters:
+      - name: lab1_vmware
+        label: vmk0
+        ip: 10.1.112.4
+        dns_name: lab1-esxi-1.harrythambi.cloud
+        alias: none
+        tags:
+        - mgmt_interface
+      - name: lab1_vmotion
+        label: vmk1
+        ip: 10.1.113.4
+        alias: none
+        tags:
+        - none
+      - name: lab1_storage
+        label: vmk2
+        ip: 10.1.114.4
+        alias: none
+        tags:
+        - none
+
+lab1_esxi_edge_hosts:
+  hosts:
+    lab1-esxi-2.harrythambi.cloud:
+      cluster: lab1_esxi_edge_hosts
+      credentials:
+        root: VMware1!VMware1!
+      esxi_username: root
+      network_adapters:
+      - name: lab1_vmware
+        label: vmk0
+        ip: 10.1.112.5
+        dns_name: lab1-esxi-2.harrythambi.cloud
+        alias: none
+        tags:
+        - mgmt_interface
+      - name: lab1_vmotion
+        label: vmk1
+        ip: 10.1.113.5
+        alias: none
+        tags:
+        - none
+      - name: lab1_storage
+        label: vmk2
+        ip: 10.1.114.5
+        alias: none
+        tags:
+        - none
+            
+lab1_esxi_compute_hosts:
+  hosts:
+    lab1-esxi-3.harrythambi.cloud:
+      cluster: lab1_esxi_compute_hosts
+      credentials:
+        root: VMware1!VMware1!
+      esxi_username: root
+      network_adapters:
+      - name: lab1_vmware
+        label: vmk0
+        ip: 10.1.112.6
+        dns_name: lab1-esxi-3.harrythambi.cloud
+        alias: none
+        tags:
+        - mgmt_interface
+      - name: lab1_vmotion
+        label: vmk1
+        ip: 10.1.113.6
+        alias: none
+        tags:
+        - none
+      - name: lab1_storage
+        label: vmk2
+        ip: 10.1.114.6
+        alias: none
+        tags:
+        - none
+
+
+
+all:
+  children:
+    lab1:
+      children:
+        lab1_vcenter:
+        lab1_esxi_management_hosts:
+        lab1_esxi_edge_hosts:
+        lab1_esxi_compute_hosts:
+      vars:
+        pod_name: lab1
+        pod_type: workload_domain
+        validate_certs: false
+        datacenter: lab1
+        time1: 0.uk.pool.ntp.org
+        time2: 1.uk.pool.ntp.org
+        components:
+          vcenter:
+            license: 04214-492E2-488G5-0K9R4-A46QM
+            filename: VMware-vCenter-Server-Appliance-7.0.3.01200-20990077_OVF10.ova
+            vds_switch_version: 7.0.3
+          esxi:
+            license: 4H625-2TW92-488G8-0WVA2-DJP50
+        networks:
+          subnets:
+            - name: lab1_vmware
+              network_cidr: 10.1.112.1/24
+              netmask: 255.255.255.0
+              network: 10.1.112.0
+              gateway: 10.1.112.1
+              cidr: 24
+              vlan: 112
+              trunk: false
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+            - name: lab1_vmotion
+              network_cidr: 10.1.113.1/24
+              netmask: 255.255.255.0
+              network: 10.1.113.0
+              gateway: 10.1.113.1
+              cidr: 24
+              vlan: 113
+              trunk: false
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+            - name: lab1_storage
+              network_cidr: 10.1.114.1/24
+              netmask: 255.255.255.0
+              network: 10.1.114.0
+              gateway: 10.1.114.1
+              cidr: 24
+              vlan: 114
+              trunk: false
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+            - name: lab1_edge_overlay_tep
+              network_cidr: 10.1.115.1/24
+              netmask: 255.255.255.0
+              network: 10.1.115.0
+              gateway: 10.1.115.1
+              cidr: 24
+              vlan: 115
+              trunk: false
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+              tags: nsxt_edge_overlay_network
+            - name: lab1_host_overlay_tep
+              network_cidr: 10.1.116.1/24
+              netmask: 255.255.255.0
+              network: 10.1.116.0
+              gateway: 10.1.116.1
+              cidr: 24
+              vlan: 116
+              trunk: false
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+              tags: nsxt_host_overlay_network
+            - name: lab1_edge_uplink_1
+              network_cidr: 10.1.117.1/24
+              netmask: 255.255.255.0
+              network: 10.1.117.0
+              gateway: 10.1.117.1
+              cidr: 24
+              vlan: 117
+              trunk: true
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+            - name: lab1_edge_uplink_2
+              network_cidr: 10.1.118.1/24
+              netmask: 255.255.255.0
+              network: 10.1.118.0
+              gateway: 10.1.118.1
+              cidr: 24
+              vlan: 118
+              trunk: true
+              domain: workload_domain
+              vdswitch: vds_lab1
+              vmnics:
+              - vmnic0
+              - vmnic1
+          vmks:
+          - name: vmk0
+            enable_mgmt: true
+            enable_vmotion: false
+            enable_vsan: false
+            enable_ft: false
+          - name: vmk1
+            enable_mgmt: false
+            enable_vmotion: true
+            enable_vsan: false
+            enable_ft: false
+          - name: vmk2
+            enable_mgmt: false
+            enable_vmotion: false
+            enable_vsan: true
+            enable_ft: false
